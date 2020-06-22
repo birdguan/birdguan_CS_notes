@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Initial page](README.md)
+* [小白码农笔记本](README.md)
 
 ## 基础部分 <a id="basic"></a>
 
