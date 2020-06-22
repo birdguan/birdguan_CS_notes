@@ -19,6 +19,7 @@
   * [应用层](basic/ji-suan-ji-wang-luo/ying-yong-ceng.md)
 * [数据库](basic/shu-ju-ku/README.md)
   * [数据库系统原理](basic/shu-ju-ku/shu-ju-ku-xi-tong-yuan-li.md)
+  * [SQL基本用法](basic/shu-ju-ku/sql-ji-ben-yong-fa.md)
   * [MySQL](basic/shu-ju-ku/mysql.md)
   * [Redis](basic/shu-ju-ku/redis.md)
 
