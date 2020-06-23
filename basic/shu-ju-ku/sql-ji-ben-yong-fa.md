@@ -408,5 +408,298 @@ FROM employee AS e1 INNER JOIN employee AS e2
 ON e1.employee = e2.employee AND e2.name = "Jim";
 ```
 
+### 自然连接
 
+自然连接是把同名列通过等值测试连接起来的，同名列可以有多个。
+
+内连接和自然连接的区别：内连接提供连接的列，而自然连接自动连接所有的同名列。
+
+```sql
+SELECT A.value, B.value
+FROM tablea AS a NATURAL JOIN tableb as B;
+```
+
+### 外连接
+
+外连接保留了没有关联的哪些行。分为左外连接，右外连接以及全外连接，左外连接就是保留左表没有关联的行。
+
+检索所有顾客的订单信息，包括还没有订单信息的顾客。
+
+```sql
+SELECT Customers.cust_id, Customers.cust_name, Orders.order_id
+FROM Customers LEFT OUTER JOIN Orders
+ON Customers.cust_id = Orders.cust_id;
+```
+
+customers 表：
+
+| cust\_id | cust\_name |
+| :--- | :--- |
+| 1 | a |
+| 2 | b |
+| 3 | c |
+
+orders 表：
+
+| order\_id | cust\_id |
+| :--- | :--- |
+| 1 | 1 |
+| 2 | 1 |
+| 3 | 3 |
+| 4 | 3 |
+
+结果：
+
+| cust\_id | cust\_name | order\_id |
+| :--- | :--- | :--- |
+| 1 | a | 1 |
+| 1 | a | 2 |
+| 3 | c | 3 |
+| 3 | c | 4 |
+| 2 | b | Null |
+
+## 十六、组合查询
+
+使用UNION来组合两个查询，如果第一个查询返回M行，第二个查询返回N行，那么组合查询的结果一般为M+N行。
+
+每个查询必须包含相同的列、表达式和聚集函数。
+
+默认会去除相同行，如果要保留相同行，使用UNION ALL。
+
+只能包含一个ORDER BY子句，并且必须位于语句的最后。
+
+```sql
+SELECT col FROM mytable WHERE col = 1
+UNION
+SELECT col FROM mytable WHERE col = 2;
+```
+
+## 十七、视图
+
+视图是虚拟的表，本身不包含数据，也就不能对其进行索引操作。
+
+对视图的操作和对普通表的操作一样。
+
+视图具有如下好处：
+
+* 简化复杂的SQL操作，比如复杂的连接；
+* 只是用实际表的一部分数据；
+* 通过只给用户访问视图的权限，保证数据的安全性；
+* 更改数据格式和表示。
+
+```sql
+CREATE VIEW myview AS
+SELECT Concat(col1, col2) AS concat_col, col3 * col4 AS compute_col
+FROM mytable
+WHERE col4 = val;
+```
+
+## 十八、存储过程
+
+存储过程可以看成对一系列SQL操作的批处理。
+
+使用存储过程的好处：
+
+* 代码封装，保证了一定的安全性
+* 代码复用
+* 由于是预先编译，因此具有很高的性能
+
+命令行中创建存储过程需要自定义分隔符，因为命令行是以";"为结束符，而存储过程中也包含了分号，因此会错误把这部分当成是结束符，造成语法错误。
+
+包含in, out, inout三种参数。
+
+给变量赋值都需要用select into 语句。
+
+每次只能给一个变量赋值，不支持集合的操作。
+
+```sql
+delimiter // -- 配置定界符
+create procedure myprocedure(out ret int)
+    begin
+        declare y intl
+        select sum(col1)
+        from mytable
+        into y;
+        select y * y into ret;
+    end //
+delimiter;
+```
+
+```sql
+call myprocedure(@ret);
+select @ret;
+```
+
+## 十九、游标
+
+在存储过程中使用游标可以对一个结果集进行移动遍历。
+
+游标主要用于交互式应用，其中用户需要对数据集中的任意行进行浏览和修改。
+
+使用游标的四个步骤：
+
+1. 声明游标，这个过程没有实际检索出数据；
+2. 打开游标；
+3. 取出数据；
+4. 关闭游标；
+
+```sql
+delimiter //
+create procedure myprocedure(out ret int)
+    begin
+        declare done boolean default 0;
+
+        declare mycursor cursor for
+        select col1 from mytable;
+        # 定义了一个 continue handler，当 sqlstate '02000' 这个条件出现时，会执行 set done = 1
+        declare continue handler for sqlstate '02000' set done = 1;
+
+        open mycursor;
+
+        repeat
+            fetch mycursor into ret;
+            select ret;
+        until done end repeat;
+
+        close mycursor;
+    end //
+ delimiter ;
+```
+
+## 二十、触发器
+
+触发器会在某个表执行以下语句时而自动执行：DELETE、INSERT、UPDATE。
+
+触发器必须指定在语句执行之前还是之后自动执行，之前执行使用 BEFORE 关键字，之后执行使用 AFTER 关键字。BEFORE 用于数据验证和净化，AFTER 用于审计跟踪，将修改记录到另外一张表中。
+
+INSERT 触发器包含一个名为 NEW 的虚拟表。
+
+```sql
+CREATE TRIGGER mytrigger AFTER INSERT ON mytable
+FOR EACH ROW SELECT NEW.col into @result;
+
+SELECT @result; -- 获取结果
+```
+
+DELETE 触发器包含一个名为 OLD 的虚拟表，并且是只读的。
+
+UPDATE 触发器包含一个名为 NEW 和一个名为 OLD 的虚拟表，其中 NEW 是可以被修改的，而 OLD 是只读的。
+
+MySQL 不允许在触发器中使用 CALL 语句，也就是不能调用存储过程。
+
+## 二十一、事务管理
+
+基本术语：
+
+* 事务（transaction）指一组 SQL 语句；
+* 回退（rollback）指撤销指定 SQL 语句的过程；
+* 提交（commit）指将未存储的 SQL 语句结果写入数据库表；
+* 保留点（savepoint）指事务处理中设置的临时占位符（placeholder），你可以对它发布回退（与回退整个事务处理不同）。
+
+不能回退 SELECT 语句，回退 SELECT 语句也没意义；也不能回退 CREATE 和 DROP 语句。
+
+MySQL 的事务提交默认是隐式提交，每执行一条语句就把这条语句当成一个事务然后进行提交。当出现 START TRANSACTION 语句时，会关闭隐式提交；当 COMMIT 或 ROLLBACK 语句执行后，事务会自动关闭，重新恢复隐式提交。
+
+设置 autocommit 为 0 可以取消自动提交；autocommit 标记是针对每个连接而不是针对服务器的。
+
+如果没有设置保留点，ROLLBACK 会回退到 START TRANSACTION 语句处；如果设置了保留点，并且在 ROLLBACK 中指定该保留点，则会回退到该保留点。
+
+```sql
+START TRANSACTION
+// ...
+SAVEPOINT delete1
+// ...
+ROLLBACK TO delete1
+// ...
+COMMIT
+```
+
+## 二十二、字符集
+
+基本术语：
+
+* 字符集为字母和符号的集合；
+* 编码为某个字符集成员的内部表示；
+* 校对字符指定如何比较，主要用于排序和分组。
+
+除了给表指定字符集和校对外，也可以给列指定：
+
+```sql
+CREATE TABLE mytable
+(col VARCHAR(10) CHARACTER SET latin COLLATE latin1_general_ci )
+DEFAULT CHARACTER SET hebrew COLLATE hebrew_general_ci;
+```
+
+可以在排序、分组时指定校对：
+
+```sql
+SELECT *
+FROM mytable
+ORDER BY col COLLATE latin1_general_ci;
+```
+
+## 二十三、权限管理
+
+MySQL 的账户信息保存在 mysql 这个数据库中。
+
+```sql
+USE mysql;
+SELECT user FROM user;
+```
+
+**创建账户**
+
+新创建的账户没有任何权限。
+
+```sql
+CREATE USER myuser IDENTIFIED BY 'mypassword';
+```
+
+**修改账户名**
+
+```sql
+RENAME USER myuser TO newuser;
+```
+
+**删除账户**
+
+```sql
+DROP USER myuser;
+```
+
+**查看权限**
+
+```sql
+SHOW GRANTS FOR myuser;
+```
+
+**授予权限**
+
+账户用 username@host 的形式定义，username@% 使用的是默认主机名。
+
+```sql
+GRANT SELECT, INSERT ON mydatabase.* TO myuser;
+```
+
+**删除权限**
+
+GRANT 和 REVOKE 可在几个层次上控制访问权限：
+
+* 整个服务器，使用 GRANT ALL 和 REVOKE ALL；
+* 整个数据库，使用 ON database.\*；
+* 特定的表，使用 ON database.table；
+* 特定的列；
+* 特定的存储过程。
+
+```sql
+REVOKE SELECT, INSERT ON mydatabase.* FROM myuser;
+```
+
+**更改密码**
+
+必须使用 Password\(\) 函数进行加密。
+
+```sql
+SET PASSWROD FOR myuser = Password('new_password');
+```
 
