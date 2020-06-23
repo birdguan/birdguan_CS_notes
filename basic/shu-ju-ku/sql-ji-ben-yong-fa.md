@@ -354,10 +354,59 @@ WHERE col IN (SELECT col2 FROM mytable2);
 下面的语句可以检索出客户端的订单数量，子查询会对第一个查询检索出的每个客户执行一次：
 
 ```sql
-SELECT cut_name, (SELECT COUNT(*) FROM Orders
+SELECT cust_name, (SELECT COUNT(*) FROM Orders
                   WHERE Orders.cust_id = Customers.cust_id)
                   AS orders_num
 FROM Customers
 ORDER BY cust_name;
 ```
+
+## 十五、连接
+
+连接用于连接多个表，使用JOIN关键字，并且条件语句使用ON而不是WHERE。
+
+### 内连接
+
+内连接又称等值连接，使用INNER JOIN关键字。
+
+```sql
+SELECT A.value, B.value
+FROM tablea AS A INNER JOIN tableb as B
+ON A.key = B.key;
+```
+
+可以不明确使用INNER JOIN，而使用普通查询并在WHERE中将两个表中要连接的列用等值方法连接起来。
+
+```sql
+SELECT A.value, B.value
+FROM tablea AS A, tableb AS B
+WHERE A.key = B.key;
+```
+
+### 自连接
+
+自连接可以看成内连接的一种，只是连接的表是自身而已。
+
+一张员工表，包含员工姓名和员工所属部门，要找出与Jim处于同一部门的所有员工姓名。
+
+子查询版本
+
+```sql
+SELECT name 
+FROM employee
+WHERE department = (
+    SELECT department
+    FROM employee
+    WHERE name = "Jim");
+```
+
+自连接版本：
+
+```sql
+SELECT e1.name
+FROM employee AS e1 INNER JOIN employee AS e2
+ON e1.employee = e2.employee AND e2.name = "Jim";
+```
+
+
 
