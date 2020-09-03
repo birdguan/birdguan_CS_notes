@@ -82,11 +82,11 @@ sleep属于线程类，wait属于Object类，sleep不释放锁。
 
 ## **线程池状态**
 
-线程池有5种状态：running, showdown, stop, tidying, terminated
+线程池有5种状态：running, shutdown, stop, tidying, terminated
 
 * running: 线程池处于运行状态，可以接受任务、执行任务，创建线程默认就是这个状态
-* showdown: 调用showdown\(\)函数，不会接受新任务，但是会慢慢处理完堆积的任务
-* stop: 调用showdown\(\)函数，不会接受新任务，也不会处理已有的任务，会中断现有的任务
+* shutdown: 调用shutdown\(\)函数，不会接受新任务，但是会慢慢处理完堆积的任务
+* stop: 调用shutdownNow\(\)函数，不会接受新任务，也不会处理已有的任务，会中断现有的任务
 * tidying: 当线程池状态为showdown或者stop，任务数量为0，就会变为tidying。这个时候会调用钩子函数terminated
 * terminated: terminated\(\)执行完成
 
