@@ -34,7 +34,7 @@ Node可以支持链表和红黑树的转化，比如TreeBin就是继承了Node�
 
 1.7版本的ConcurrentHashMap的基于segment的，segment内部维护了HashEntry数组，所以扩容是在这个基础上的，类比HashMap的扩容。
 
-1.8版本的ConcurrentHashMap扩容方式比较复杂，利用了ForwardingNode，会先根据机器内核数来分配每个线程能分到的busket数（最小是16）,这样可以做到多携程协助迁移，提升速递，然后更具自己分配的busket数来进行节点转移，如果为空，就放置ForeardingNode，代表已经迁移完成，如果是非空节点，加锁，链路循环，进行迁移。
+1.8版本的ConcurrentHashMap扩容方式比较复杂，利用了ForwardingNode，会先根据机器内核数来分配每个线程能分到的busket数（最小是16）,这样可以做到多携程协助迁移，提升速递，然后更具自己分配的busket数来进行节点转移，如果为空，就放置ForwardingNode，代表已经迁移完成，如果是非空节点，加锁，链路循环，进行迁移。
 
 ## **HashMap的put方法过程**
 
