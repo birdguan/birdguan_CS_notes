@@ -190,5 +190,5 @@ fork和cow。fork是指redis通过创建子线程来进行bgsave操作，cow是�
 ## **为啥redis zset使用跳跃链表而不是红黑树实现？**
 
 1. skiplist的复杂度和红黑树一样，而且实现起来更简单
-2. 在并发环境下红黑树在插入和删除时需要rebalance，性能不如调表
+2. 在并发环境下红黑树在插入和删除时需要rebalance，性能不如跳表
 
