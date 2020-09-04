@@ -85,7 +85,7 @@ Load bean definitions from the specified resource.
 * 注解注入
 * 接口注入
 
-## **Soring的循环依赖**
+## **Spring的循环依赖**
 
 ☞ 什么是循环依赖？
 
